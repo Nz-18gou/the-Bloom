@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5b7cf" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Time Bloom</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+  <header>
+    <div>
+      <div class="brand">🌸 Time Bloom</div>
+      <div class="tagline">Make your time bloom.</div>
+    </div>
+    <button class="icon-btn" id="todayBtn">Today</button>
+  </header>
+
+  <main>
+    <section id="calendarView" class="view active">
+      <div class="month-nav">
+        <button id="prevMonth">‹</button>
+        <h1 id="monthTitle"></h1>
+        <button id="nextMonth">›</button>
+      </div>
+      <div class="calendar" id="calendar"></div>
+
+      <section class="card" id="dayDetail">
+        <h2 id="selectedDateTitle">Today</h2>
+        <div class="day-grid">
+          <div>
+            <h3>🔴 Fixed schedule</h3>
+            <div id="eventsList"></div>
+            <button class="small-btn" id="addEvent">＋ Add schedule</button>
+          </div>
+          <div>
+            <h3>✨ Free time</h3>
+            <div id="freeTimeList"></div>
+            <div class="total" id="freeTotal"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>🚨 Time status</h2>
+        <div id="alerts"></div>
+      </section>
+    </section>
+
+    <section id="goalsView" class="view">
+      <div class="page-title"><h1>🎯 Goals</h1><button class="small-btn" id="addGoal">＋ Goal</button></div>
+      <div id="goalsList"></div>
+    </section>
+
+    <section id="tasksView" class="view">
+      <div class="page-title"><h1>📝 Tasks & Assignments</h1><button class="small-btn" id="addTask">＋ Task</button></div>
+      <div id="tasksList"></div>
+    </section>
+
+    <section id="timeView" class="view">
+      <h1>⏱ Time</h1>
+      <div class="card"><h2>Remaining free time this month</h2><div class="big-number" id="monthFree"></div></div>
+      <div class="card"><h2>Time required for unfinished goals & tasks</h2><div class="big-number" id="requiredTime"></div></div>
+      <div class="card"><h2>Suggestions</h2><div id="suggestions"></div></div>
+    </section>
+
+    <section id="insightsView" class="view">
+      <h1>📊 Insights</h1>
+      <div class="card"><h2>Study time by category</h2><div id="categoryStats"></div></div>
+      <div class="card"><h2>This is your planning space 🌷</h2><p>As you add schedules, tasks, and goals, Time Bloom will calculate your available time and show warnings when your plans become difficult.</p></div>
+    </section>
+  </main>
+
+  <nav>
+    <button data-view="calendarView" class="nav active">📅<span>Calendar</span></button>
+    <button data-view="goalsView" class="nav">🎯<span>Goals</span></button>
+    <button data-view="tasksView" class="nav">📝<span>Tasks</span></button>
+    <button data-view="timeView" class="nav">⏱️<span>Time</span></button>
+    <button data-view="insightsView" class="nav">📊<span>Insights</span></button>
+  </nav>
+</div>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-box">
+    <button class="close" id="closeModal">×</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name":"Time Bloom",
+  "short_name":"Time Bloom",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#fff8fc",
+  "theme_color":"#f5b7cf",
+  "description":"A cute planner for schedules, free time, goals and assignments."
+}
