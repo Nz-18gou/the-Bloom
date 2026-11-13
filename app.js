@@ -13,7 +13,8 @@ const mins=t=>{let[a,b]=t.split(":").map(Number);return a*60+b};
 const fmt=m=>`${Math.floor(m/60)}h ${m%60?m%60+"m":""}`.trim();
 
 function seed(){
- if(data.events.length||data.tasks.length||data.goals.length)return;
+ if(data.initialized) return;
+ data.initialized=true;
  const m=iso(today);
  data.events=[
   {date:m,title:"University",category:"🏫 University",start:"09:00",end:"16:00"},
@@ -63,7 +64,7 @@ function renderDay(){
  const date=iso(selected);
  $("#selectedDateTitle").textContent=new Intl.DateTimeFormat("ja-JP",{month:"long",day:"numeric",weekday:"short"}).format(selected);
  const ev=data.events.filter(e=>e.date===date);
- $("#eventsList").innerHTML=ev.length?ev.map(e=>`<div class="item">${e.category} <b>${e.title}</b><br><small>${e.start}–${e.end}</small></div>`).join(""):"<div class='item'>No fixed schedules yet 🌷</div>";
+ $("#eventsList").innerHTML=ev.length?ev.map((e,i)=>`<div class="item">${e.category} <b>${e.title}</b><br><small>${e.start}–${e.end}</small><button class="delete-btn" onclick="editEvent('${date}',${i})">Edit ✏️</button><button class="delete-btn" onclick="deleteEvent('${date}',${i})">Delete</button></div>`).join(""):"<div class='item'>No fixed schedules yet 🌷</div>";
  const slots=freeSlots(date);
  $("#freeTimeList").innerHTML=slots.map(s=>`<div class="item">✨ ${tstr(s[0])}–${tstr(s[1])}</div>`).join("")||"<div class='item'>No free time</div>";
  $("#freeTotal").textContent="Total: "+fmt(slots.reduce((a,s)=>a+s[1]-s[0],0));
@@ -83,11 +84,11 @@ function taskStatus(t){
 function renderTasks(){
  const list=$("#tasksList");
  if(!data.tasks.length){list.innerHTML="<div class='card'>No tasks yet 🌷</div>";return}
- list.innerHTML=data.tasks.map((t,i)=>{const[s,msg]=taskStatus(t);return `<div class="card"><b>${t.title}</b><p>${t.category} · Due: ${t.due||"No deadline"}</p><div class="progress"><div style="width:${Math.min(100,(t.spent/t.estimated)*100)||0}%"></div></div><p>${t.spent||0}h / ${t.estimated||0}h · ${msg}</p><button class="small-btn" onclick="suggestTask(${i})">💡 Suggest time</button></div>`}).join("");
+ list.innerHTML=data.tasks.map((t,i)=>{const[s,msg]=taskStatus(t);return `<div class="card"><b>${t.title}</b><p>${t.category} · Due: ${t.due||"No deadline"}</p><div class="progress"><div style="width:${Math.min(100,(t.spent/t.estimated)*100)||0}%"></div></div><p>${t.spent||0}h / ${t.estimated||0}h · ${msg}</p><button class="small-btn" onclick="suggestTask(${i})">💡 Suggest time</button><button class="small-btn" onclick="editTask(${i})">Edit ✏️</button><button class="delete-btn" onclick="deleteTask(${i})">Delete</button></div>`}).join("");
 }
 
 function renderGoals(){
- $("#goalsList").innerHTML=data.goals.length?data.goals.map((g,i)=>`<div class="card"><b>${g.category} ${g.title}</b><p>${g.actual||0} / ${g.target||0} hours</p><div class="progress"><div style="width:${Math.min(100,(g.actual/g.target)*100)||0}%"></div></div><p>${goalMessage(g)}</p></div>`).join(""):"<div class='card'>No goals yet 🌷</div>";
+ $("#goalsList").innerHTML=data.goals.length?data.goals.map((g,i)=>`<div class="card"><b>${g.category} ${g.title}</b><p>${g.actual||0} / ${g.target||0} hours</p><div class="progress"><div style="width:${Math.min(100,(g.actual/g.target)*100)||0}%"></div></div><p>${goalMessage(g)}</p><button class="delete-btn" onclick="editGoal(${i})">Edit ✏️</button><button class="delete-btn" onclick="deleteGoal(${i})">Delete</button></div>`).join(""):"<div class='card'>No goals yet 🌷</div>";
 }
 function monthFree(){
  let total=0, d=new Date(today);d.setHours(0,0,0,0);
@@ -147,7 +148,28 @@ document.addEventListener("submit",e=>{
  if(e.target.id==="eventForm"){e.preventDefault();const f=Object.fromEntries(new FormData(e.target));data.events.push({...f,date:iso(selected)});save();$("#modal").classList.add("hidden");renderAll()}
  if(e.target.id==="taskForm"){e.preventDefault();const f=Object.fromEntries(new FormData(e.target));f.estimated=+f.estimated;f.spent=+f.spent;data.tasks.push(f);save();$("#modal").classList.add("hidden");renderAll()}
  if(e.target.id==="goalForm"){e.preventDefault();const f=Object.fromEntries(new FormData(e.target));f.target=+f.target;f.actual=+f.actual;f.period="monthly";data.goals.push(f);save();$("#modal").classList.add("hidden");renderAll()}
+ if(e.target.id==="editEventForm"){e.preventDefault();const f=Object.fromEntries(new FormData(e.target));const i=+f.index;delete f.index;data.events[i]={...data.events[i],...f};save();$("#modal").classList.add("hidden");renderAll()}
+ if(e.target.id==="editTaskForm"){e.preventDefault();const f=Object.fromEntries(new FormData(e.target));const i=+f.index;delete f.index;f.estimated=+f.estimated;f.spent=+f.spent;data.tasks[i]={...data.tasks[i],...f};save();$("#modal").classList.add("hidden");renderAll()}
+ if(e.target.id==="editGoalForm"){e.preventDefault();const f=Object.fromEntries(new FormData(e.target));const i=+f.index;delete f.index;f.target=+f.target;f.actual=+f.actual;data.goals[i]={...data.goals[i],...f};save();$("#modal").classList.add("hidden");renderAll()}
 });
+
+
+window.editEvent=(date,index)=>{
+ const list=data.events.map((e,i)=>({e,i})).filter(x=>x.e.date===date); const target=list[index]; if(!target)return;
+ const e=target.e;
+ modal(`<h2>✏️ Edit schedule</h2><form id="editEventForm"><input type="hidden" name="index" value="${target.i}"><label>Title<input name="title" required value="${e.title}"></label><label>Category<input name="category" value="${e.category}"></label><label>Start time<input name="start" type="time" required value="${e.start}"></label><label>End time<input name="end" type="time" required value="${e.end}"></label><button>Save changes</button></form>`);
+};
+window.editTask=i=>{const t=data.tasks[i];if(!t)return; modal(`<h2>✏️ Edit task</h2><form id="editTaskForm"><input type="hidden" name="index" value="${i}"><label>Task name<input name="title" required value="${t.title}"></label><label>Category<input name="category" value="${t.category}"></label><label>Due date<input name="due" type="date" value="${t.due||''}"></label><label>Estimated hours<input name="estimated" type="number" step="0.5" value="${t.estimated||0}"></label><label>Hours already spent<input name="spent" type="number" step="0.5" value="${t.spent||0}"></label><button>Save changes</button></form>`)};
+window.editGoal=i=>{const g=data.goals[i];if(!g)return; modal(`<h2>✏️ Edit goal</h2><form id="editGoalForm"><input type="hidden" name="index" value="${i}"><label>Goal<input name="title" required value="${g.title}"></label><label>Category<input name="category" value="${g.category}"></label><label>Target hours<input name="target" type="number" step="0.5" value="${g.target||0}"></label><label>Actual hours<input name="actual" type="number" step="0.5" value="${g.actual||0}"></label><button>Save changes</button></form>`)};
+
+window.deleteEvent=(date,index)=>{
+ const list=data.events.map((e,i)=>({e,i})).filter(x=>x.e.date===date);
+ const target=list[index];
+ if(!target) return;
+ if(confirm(`Delete “${target.e.title}”?`)){data.events.splice(target.i,1);save();renderAll()}
+};
+window.deleteTask=i=>{const t=data.tasks[i];if(t&&confirm(`Delete “${t.title}”?`)){data.tasks.splice(i,1);save();renderAll()}};
+window.deleteGoal=i=>{const g=data.goals[i];if(g&&confirm(`Delete “${g.title}”?`)){data.goals.splice(i,1);save();renderAll()}};
 
 window.suggestTask=i=>{
  const t=data.tasks[i], date=t.due?new Date(t.due+"T23:59:00"):new Date(today.getTime()+7*86400000);
