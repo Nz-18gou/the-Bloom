@@ -50,7 +50,7 @@ function renderCalendar(){
 }
 
 function freeSlots(date){
- const dayStart=7*60, dayEnd=24*60;
+ const dayStart=0, dayEnd=24*60;
  const ev=data.events.filter(e=>e.date===date).map(e=>({s:Math.max(dayStart,mins(e.start)),e:Math.min(dayEnd,mins(e.end))})).sort((a,b)=>a.s-b.s);
  let slots=[],cursor=dayStart;
  for(const x of ev){if(x.s>cursor)slots.push([cursor,x.s]);cursor=Math.max(cursor,x.e)}
